@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-
-from flask import Flask
+import json
+from flask import Flask, make_response
 from flask_restful import reqparse, abort, Resource, Api
+from flask_cors import CORS
 
 app = Flask(__name__)
 api = Api(app)
+CORS(app,  resources={r"/todos/*": {"origins": "*"}})
 
 parser = reqparse.RequestParser()
 parser.add_argument("task")
@@ -14,6 +16,15 @@ TODOs = {
     2: {"task": "????"},
     3: {"task": "profit!"}
 }
+
+
+@api.representation('application/json')
+def output_json(data, code, headers=None):
+    resp = make_response(json.dumps(data), code)
+    resp.headers.extend({
+        'Content-Security-Policy': "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';"
+    })
+    return resp
 
 def abort_if_todo_not_found(todo_id):
     if todo_id not in TODOs:
